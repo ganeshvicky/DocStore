@@ -3,6 +3,8 @@ package com.gv.docstore;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -16,19 +18,30 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     String tempimgloc;
     File temp;
+    RecyclerView recyclerView;
+
+    private List<Dataset> datasetList = new ArrayList<>();
+    private MyAdapter myAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        recyclerView = findViewById(R.id.rec_view);
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
+
+        myAdapter = new MyAdapter(datasetList);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(myAdapter);
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -66,6 +79,16 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 System.out.println("FILE NOT DELETED");
             }
+        }else if(requestCode == 1 && resultCode == RESULT_OK){
+
+                getfiles();
+
+            if(datasetList != null) {
+                for (Dataset i : datasetList) {
+                    System.out.println(i.getImg());
+                    System.out.println(i.getImgname());
+                }
+            }
         }
     }
 
@@ -77,15 +100,27 @@ public class MainActivity extends AppCompatActivity {
         temp = img.getAbsoluteFile();
         tempimgloc = img.getAbsolutePath();
         return img;
+    }
 
-
+    private void getfiles(){
+        datasetList.clear();
+        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if(dir.listFiles() != null) {
+            for (File i : dir.listFiles()) {
+                if (i.isFile()) {
+                    datasetList.add(new Dataset(i.getPath(), i.getPath()));
+                }
+            }
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        View view = findViewById(R.id.floatingActionButton);
-        Snackbar.make(view, "resumed", Snackbar.LENGTH_SHORT).show();
+        //View view = findViewById(R.id.floatingActionButton);
+        //Snackbar.make(view, "resumed", Snackbar.LENGTH_SHORT).show();
+        getfiles();
+        myAdapter.notifyDataSetChanged();
     }
 
 }
